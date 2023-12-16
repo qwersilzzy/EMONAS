@@ -10,28 +10,45 @@ import struct
 import numpy
 import bitstring 
 
+# def bin2float(b):
+#     ''' Convert binary string to a float.
+#
+#     Attributes:
+#         :b: Binary string to transform.
+#     '''
+#     h = int(b, 2).to_bytes(8, byteorder="big")
+#     return struct.unpack('>d', h)[0]
+#
+#
+# def float2bin(f):
+#     ''' Convert float to 64-bit binary string.
+#
+#     Attributes:
+#         :f: Float number to transform.
+#     '''
+#     [d] = struct.unpack(">Q", struct.pack(">d", f))
+#     return f'{d:064b}'
+# '''IEEE 754 representation
+# '''
+
+
 def bin2float(b):
     ''' Convert binary string to a float.
 
     Attributes:
         :b: Binary string to transform.
     '''
-    h = int(b, 2).to_bytes(8, byteorder="big")
-    return struct.unpack('>d', h)[0]
+    h = int(b, 2).to_bytes(4, byteorder="big")
+    return struct.unpack('>f', h)[0]
 
 
 def float2bin(f):
-    ''' Convert float to 64-bit binary string.
-
+    ''' Convert float to 32-bit binary string.
     Attributes:
         :f: Float number to transform.
     '''
-    [d] = struct.unpack(">Q", struct.pack(">d", f))
-    return f'{d:064b}'
-'''IEEE 754 representation 
-'''
-
-
+    [d] = struct.unpack(">I", struct.pack(">f", f))
+    return f'{d:032b}'
 
 def number_of_ones(n):
       one_count = 0
@@ -102,4 +119,5 @@ def counter_ones_for_params_version_3(out):
         random_tensor_for_ones[i] = counter_ones_version_2(out[i])[0]
         summation_of_ones = torch.sum(random_tensor_for_ones)
     return summation_of_ones
+
 

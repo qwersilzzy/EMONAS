@@ -1,6 +1,6 @@
 import sys
 # update your projecty root path before running
-sys.path.insert(0, '..')
+sys.path.insert(0, '/path/to/nsga-net')
 
 import os
 import numpy as np
@@ -19,7 +19,6 @@ from models.micro_models import NetworkCIFAR as Network
 import search.cifar10_search as my_cifar10
 
 import time
-from tqdm import tqdm, trange
 from misc import utils
 from search import micro_encoding
 from search import macro_encoding
@@ -27,7 +26,7 @@ from misc.flops_counter import add_flops_counting_methods
 
 from search import counter_test
 
-device = 'cpu'
+device = 'cuda'
 
 
 def main(genome, epochs, search_space='micro',
@@ -77,11 +76,11 @@ def main(genome, epochs, search_space='micro',
     logging.info("Genome = %s", genome)
     logging.info("Architecture = %s", genotype)
 
-    # torch.cuda.set_device(gpu)
-    # cudnn.benchmark = True
+    torch.cuda.set_device(gpu)
+    cudnn.benchmark = True
     torch.manual_seed(seed)
-    # cudnn.enabled = True
-    # torch.cuda.manual_seed(seed)
+    cudnn.enabled = True
+    torch.cuda.manual_seed(seed)
 
     # n_params = (np.sum(np.prod(v.size()) for v in filter(lambda p: p.requires_grad, model.parameters())) / 1e6)
     # model = model.to(device)
@@ -153,7 +152,7 @@ def main(genome, epochs, search_space='micro',
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, int(epochs))
 
     all_files = []
-    for epoch in trange(epochs):
+    for epoch in range(epochs):
         scheduler.step()
         logging.info('epoch %d lr %e', epoch, scheduler.get_lr()[0])
         model.droprate = drop_path_prob * epoch / epochs
@@ -190,11 +189,11 @@ def main(genome, epochs, search_space='micro',
     logging.info('len(learnable_parameters) = %i', len(learnable_parameters))
     logging.info('learnable_parameters_ones_counting = %i', learnable_parameters_ones_counting.item())
 
-    # save the final network parameter into a separate txt file
-    with open(os.path.join(save_pth, 'learnable_parameters.txt'), "w") as file:
-        file.writelines("% s\n" % data for data in learnable_parameters)
-        file.close()
-    # save the final network parameter into a separate txt file
+    # # save the final network parameter into a separate txt file
+    # with open(os.path.join(save_pth, 'learnable_parameters.txt'), "w") as file:
+    #     file.writelines("% s\n" % data for data in learnable_parameters)
+    #     file.close()
+    # # save the final network parameter into a separate txt file
 
 
     # save to file
@@ -259,7 +258,7 @@ def train(train_queue, net, criterion, optimizer, params):
     correct = 0
     total = 0
 
-    for step, (inputs, targets) in tqdm(enumerate(train_queue), total=len(train_queue)):
+    for step, (inputs, targets) in enumerate(train_queue):
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
         outputs, outputs_aux = net(inputs)

@@ -1,13 +1,13 @@
 import sys
 # update your projecty root path before running
-sys.path.insert(0, '..')
+# sys.path.insert(0, '/path/to/nsga-net')
+sys.path.insert(0, "..")
+
 
 import os
 import time
-import tqdm
 import logging
 import argparse
-from tqdm import trange
 from misc import utils
 
 import numpy as np
@@ -24,9 +24,9 @@ from pymoo.optimize import minimize
 # from numpy import load
 
 parser = argparse.ArgumentParser("Multi-objetive Genetic Algorithm for NAS")
-parser.add_argument('--save', type=str, default='evolutionary_search/20230226_random_search_macro/0_ggg/GA-BiObj', help='experiment name')
+parser.add_argument('--save', type=str, default='evolutionary_search/F8test_20230727/0_ggg/GA-BiObj', help='experiment name')
 parser.add_argument('--seed', type=int, default=0, help='random seed')
-parser.add_argument('--search_space', type=str, default='micro', help='macro or micro search space')
+parser.add_argument('--search_space', type=str, default='macro', help='macro or micro search space')
 # arguments for micro search space
 parser.add_argument('--n_blocks', type=int, default=5, help='number of blocks in a cell')
 parser.add_argument('--n_ops', type=int, default=9, help='number of operations considered')
@@ -34,13 +34,13 @@ parser.add_argument('--n_cells', type=int, default=2, help='number of cells to s
 # arguments for macro search space
 parser.add_argument('--n_nodes', type=int, default=6, help='number of nodes per phases')
 # hyper-parameters for algorithm
-parser.add_argument('--pop_size', type=int, default=100, help='population size of networks')
-parser.add_argument('--n_gens', type=int, default=0, help='population size, generation value')
-parser.add_argument('--n_offspring', type=int, default=0, help='number of offspring created per generation')
+parser.add_argument('--pop_size', type=int, default=10, help='population size of networks')
+parser.add_argument('--n_gens', type=int, default=10, help='population size, generation value')
+parser.add_argument('--n_offspring', type=int, default=10, help='number of offspring created per generation')
 # arguments for back-propagation training during search
 parser.add_argument('--init_channels', type=int, default=16, help='# of filters for first cell')
 parser.add_argument('--layers', type=int, default=11, help='equivalent with N = 3')
-parser.add_argument('--epochs', type=int, default=20, help='# of epochs to train during architecture search')
+parser.add_argument('--epochs', type=int, default=0, help='# of epochs to train during architecture search')
 args = parser.parse_args()
 
 args.save = 'search-{}-{}-{}'.format(args.save, args.search_space, time.strftime("%Y%m%d-%H%M%S"))
@@ -77,7 +77,7 @@ class NAS(Problem):
 
         objs = np.full((x.shape[0], self.n_obj), np.nan)
 
-        for i in trange(x.shape[0]):
+        for i in range(x.shape[0]):
             arch_id = self._n_evaluated + 1
             print('\n')
             logging.info('Network id = {}'.format(arch_id))
@@ -144,8 +144,8 @@ def do_every_generations(algorithm):
                  "median = {}, worst = {}".format(np.min(pop_obj[:, 0]), np.mean(pop_obj[:, 0]),
                                                   np.median(pop_obj[:, 0]), np.max(pop_obj[:, 0])))
     logging.info("learnable_parameters_ones_counting: best = {}, mean = {}, "
-                 "median = {}, worst = {}".format(np.min(pop_obj[:, 1]), np.mean(pop_obj[:, 1]),
-                                                  np.median(pop_obj[:, 1]), np.max(pop_obj[:, 1])))
+                 "median = {}, worst = {}".format(np.min(pop_obj[:, 0]), np.mean(pop_obj[:, 0]),
+                                                  np.median(pop_obj[:, 0]), np.max(pop_obj[:, 0])))
     logging.info("pop_var = {}".format(pop_var))
     logging.info("pop_obj = {}".format(pop_obj))
 
@@ -197,10 +197,9 @@ def main():
                    termination=('n_gen', args.n_gens),
                    verbose=True)
 
-    logging.info("Pareto front architecture, res.X = {}".format(res.X))
-    logging.info("Pareto front multi objective,res.F = {}".format(res.F))
+    # logging.info("Pareto front architecture, res.X = {}".format(res.X))
+    # logging.info("Pareto front multi objective,res.F = {}".format(res.F))
 
-    # from pymoo.util import plotting
     # plotting.plot(res.F)
     # plotting.animate(path_to_file=args.save, H=res.F)
 
