@@ -242,3 +242,7 @@ res_10_architecture = Genotype(normal=[('max_pool_3x3', 0), ('avg_pool_3x3', 0),
 res_11_architecture = Genotype(normal=[('max_pool_3x3', 0), ('avg_pool_3x3', 0), ('avg_pool_3x3', 1), ('sep_conv_5x5', 2), ('max_pool_3x3', 1), ('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('dil_conv_3x3', 2), ('dil_conv_5x5', 2), ('dil_conv_5x5', 1)], normal_concat=[3, 4, 5, 6], reduce=[('dil_conv_5x5', 1), ('sep_conv_3x3', 1), ('avg_pool_3x3', 2), ('sep_conv_3x3', 0), ('conv_7x1_1x7', 1), ('avg_pool_3x3', 3), ('dil_conv_3x3', 2), ('sep_conv_3x3', 0), ('max_pool_3x3', 0), ('sep_conv_5x5', 0)], reduce_concat=[4, 5, 6])
 
 # # 20230116 pareto front plot for evolutionary micro search archi 100 epoch 20
+
+
+
+

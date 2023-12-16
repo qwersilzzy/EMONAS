@@ -1111,7 +1111,84 @@ def demo():
 
     model = ResidualGenomeDecoder(genome, channels, repeats=[1, 2, 3]).get_model()
     out = model(torch.autograd.Variable(data))
+    # from torchviz import dot
+    # dot.make_dot(out.mean(), params=dict(model.named_parameters())).view()
 
+def demo_summary():
+
+    genome = [
+        [
+            [1],
+            [0, 0],
+            [1, 0, 0],
+            [1]
+        ],
+        [  # Phase will be ignored, there are no active connections (residual is not counted as active).
+            [0],
+            [0, 0],
+            [0, 0, 0],
+            [1]
+        ],
+        [
+            [1],
+            [0, 0],
+            [0, 0, 0],
+            [0, 0, 0, 0],
+            [1]
+        ]
+    ]
+
+    channels = [(3, 8), (8, 8), (8, 8)]
+    # Ensure GPU is available
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    data = torch.randn(16, 3, 32, 32).to(device)
+
+    model = ResidualGenomeDecoder(genome, channels, repeats=[1, 2, 3]).get_model().to(device)
+    out = model(torch.autograd.Variable(data))
+
+
+    # from torchsummary import summary
+    # summary(model, input_size=(3, 32, 32))
+    import summarytest
+    summarytest.summary(model, input_size=(3, 32, 32))
+def demo_dot():
+
+    genome = [
+        [
+            [1],
+            [0, 0],
+            [1, 0, 0],
+            [1]
+        ],
+        [  # Phase will be ignored, there are no active connections (residual is not counted as active).
+            [0],
+            [0, 0],
+            [0, 0, 0],
+            [1]
+        ],
+        [
+            [1],
+            [0, 0],
+            [0, 0, 0],
+            [0, 0, 0, 0],
+            [1]
+        ]
+    ]
+
+    channels = [(3, 8), (8, 8), (8, 8)]
+    # Ensure GPU is available
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    data = torch.randn(16, 3, 32, 32).to(device)
+
+    model = ResidualGenomeDecoder(genome, channels, repeats=[1, 2, 3]).get_model().to(device)
+    out = model(torch.autograd.Variable(data))
+
+    import dot
+    dot.make_dot(out, params=dict(model.named_parameters())).view()
 
 if __name__ == "__main__":
     demo()
+    # demo_summary()
+    # demo_dot()

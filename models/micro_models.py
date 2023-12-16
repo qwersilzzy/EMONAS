@@ -291,9 +291,10 @@ if __name__ == '__main__':
 
     genome = genotypes.NSGANet
     # model = AlterPyramidNetworkCIFAR(30, 10, 20, True, genome, 6, SE=False)
-    model = PyramidNetworkCIFAR(48, 10, 20, True, genome, 22, SE=True)
+    # model = PyramidNetworkCIFAR(48, 10, 20, True, genome, 22, SE=True)
     # model = NetworkCIFAR(34, 10, 20, True, genome, SE=True)
     # model = GradPyramidNetworkCIFAR(34, 10, 20, True, genome, 4)
+    model = NetworkImageNet(48, 10, 20, True, genome)
     model.droprate = 0.0
 
     # calculate number of trainable parameters

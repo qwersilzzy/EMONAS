@@ -104,7 +104,31 @@ def demo():
     params = list(net.parameters())
     print(len(params))
     print(params[0].size())  # conv1's .weight
+    #
+    # from torchviz import dot
+    # dot.make_dot(output, params)
+def demo_summary():
+    import misc.utils as utils
+    genome = [[[1], [0, 0], [0, 1, 0], [0, 1, 1, 1], [1, 0, 0, 1, 1], [0]],
+              [[0], [0, 0], [0, 1, 0], [0, 1, 0, 1], [1, 1, 1, 1, 1], [0]],
+              [[0], [0, 1], [1, 0, 1], [1, 0, 1, 1], [1, 0, 0, 1, 1], [0]]]
 
+    channels = [(3, 128), (128, 128), (128, 128)]
+    # Ensure GPU is available
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    out_features = 10
+    data = torch.randn(16, 3, 32, 32).to(device)
+    net = EvoNetwork(genome, channels, out_features, (32, 32), decoder='dense').to(device)
 
+    print("param size = {}MB".format(utils.count_parameters_in_MB(net)))
+    output = net(torch.autograd.Variable(data))
+    # print('data::', data)
+    # print('output::', output)
+
+    params = list(net.parameters())
+
+    import summarytest
+    summarytest.summary(net, input_size=(3, 32, 32))
 if __name__ == "__main__":
-    demo()
+    # demo()
+    demo_summary()
