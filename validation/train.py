@@ -3,8 +3,7 @@ from __future__ import print_function
 
 import sys
 # update your projecty root path before running
-# sys.path.insert(0, 'path/to/nsga-net')
-sys.path.insert(0, '..')
+sys.path.insert(0, 'path/to/nsga-net')
 
 import torch
 import torch.nn as nn
@@ -21,6 +20,8 @@ import argparse
 import numpy as np
 
 from misc import utils
+from misc.flops_counter import add_flops_counting_methods
+
 
 # model imports
 from models import macro_genotypes
@@ -34,15 +35,15 @@ from search import counter_test
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--seed', type=int, default=0, help='random seed')
 parser.add_argument('--data', type=str, default='../data', help='location of the data corpus')
-parser.add_argument('--batch_size', type=int, default= 8 , help='batch size')
+parser.add_argument('--batch_size', type=int, default= 2 , help='batch size')
 parser.add_argument('--learning_rate', type=float, default=0.025, help='init learning rate')
 parser.add_argument('--min_learning_rate', type=float, default=0.0, help='minimum learning rate')
 parser.add_argument('--momentum', type=float, default=0.9, help='momentum')
 parser.add_argument('--weight_decay', type=float, default=3e-4, help='weight decay')
 parser.add_argument('--report_freq', type=float, default=50, help='report frequency')
-parser.add_argument('--epochs', type=int, default= 5 , help='num of training epochs')
+parser.add_argument('--epochs', type=int, default= 3 , help='num of training epochs')
 parser.add_argument('--grad_clip', type=float, default=5, help='gradient clipping')
-parser.add_argument('--save', type=str, default='train/20230209_test/0/EXP', help='experiment name')
+parser.add_argument('--save', type=str, default='train/NSGANet_test/0/EXP', help='experiment name')
 parser.add_argument('--cutout', action='store_true', default=False, help='use cutout')
 parser.add_argument('--cutout_length', type=int, default=16, help='cutout length')
 parser.add_argument('--auxiliary', action='store_true', default=False, help='use auxiliary tower')
@@ -52,17 +53,17 @@ parser.add_argument('--layers', default=11, type=int, help='equivalent with N = 
 parser.add_argument('--droprate', default= 0.2, type=float, help='dropout probability (default: 0.0)')
 # parser.add_argument('--init_channels', type=int, default= 34, help='num of init channels')
 parser.add_argument('--init_channels', type=int, default= 16, help='num of init channels')
-# parser.add_argument('--arch', type=str, default='NSGANet', help='which architecture to use')
-parser.add_argument('--arch', type=str, default='res_F_1', help='which architecture to use')
+parser.add_argument('--arch', type=str, default='NSGANet', help='which architecture to use')
+# parser.add_argument('--arch', type=str, default='res_F_1', help='which architecture to use')
 parser.add_argument('--filter_increment', default=4, type=int, help='# of filter increment')
 parser.add_argument('--SE', action='store_true', default=False, help='use Squeeze-and-Excitation')
-parser.add_argument('--net_type', type=str, default='macro', help='(options)micro, macro')
+parser.add_argument('--net_type', type=str, default='micro', help='(options)micro, macro')
 args = parser.parse_args()
 
 args.save = 'train-{}-{}'.format(args.save, time.strftime("%Y%m%d-%H%M%S"))
 utils.create_exp_dir(args.save)
 
-device = 'cpu'
+device = 'cuda'
 
 log_format = '%(asctime)s %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
@@ -73,9 +74,9 @@ logging.getLogger().addHandler(fh)
 
 
 def main():
-    # if not torch.cuda.is_available():
-    #     logging.info('no gpu device available')
-    #     sys.exit(1)
+    if not torch.cuda.is_available():
+        logging.info('no gpu device available')
+        sys.exit(1)
 
     if args.auxiliary and args.net_type == 'macro':
         logging.info('auxiliary head classifier not supported for macro search space models')
@@ -83,13 +84,11 @@ def main():
 
     logging.info("args = %s", args)
 
-    # cudnn.enabled = True
-    # cudnn.benchmark = True
-    # np.random.seed(args.seed)
-    # torch.manual_seed(args.seed)
-    # torch.cuda.manual_seed(args.seed)
-
+    cudnn.enabled = True
+    cudnn.benchmark = True
     np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed(args.seed)
 
     best_acc = 0  # initiate a artificial best accuracy so far
 
@@ -123,9 +122,11 @@ def main():
     # logging.info("{}".format(net))
     # logging.info("param size = %fMB", utils.count_parameters_in_MB(net))
 
+
+
     net = net.to(device)
 
-    # logging.info("param size = %fMB", utils.count_parameters_in_MB(net))
+    # logging.info("param size = %fMB", utils.count_parameters(net))
     # # calculate for number of ones
     # learnable_parameters = list(net.parameters())
     # learnable_parameters_ones_counting = counter_test.counter_ones_for_params_version_3(learnable_parameters)
@@ -155,6 +156,14 @@ def main():
 
         logging.info("param size = %fMB", utils.count_parameters_in_MB(net))
 
+        # calculate for flops
+        model = add_flops_counting_methods(net)
+        model.eval()
+        model.start_flops_count()
+        random_data = torch.randn(1, 3, 32, 32)
+        model(torch.autograd.Variable(random_data).to(device))
+        n_flops = np.round(model.compute_average_flops_cost() / 1e6, 4)
+        logging.info('flops = %f MB', n_flops)
 
         # calculate for number of ones
         learnable_parameters = list(net.parameters())
